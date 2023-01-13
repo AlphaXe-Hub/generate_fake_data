@@ -35,7 +35,7 @@ def getAreaId():
         num = area.read()
     num_list = num.split('\n')
     while True:
-        res = num_list[random.randint(0, len(num_list))]
+        res = num_list[random.randint(0, len(num_list)-3)]
         if res[4:] != '00':
             return res
 
