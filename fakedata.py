@@ -2,7 +2,7 @@ import random
 import calendar
 
 
-# 加载字典
+# 加载字典,若有字典更新,手动更新area_fix,area_fix2文件
 def area_dict_gen():
     with open("area_fix", encoding='utf-8') as area:
         num = area.read()
@@ -18,29 +18,30 @@ def area_dict_gen():
 
 # 从id得到地区
 def id_to_area(str):
-    dic = area_dict_gen()
-    p = dic[str[:-4] + '0000']
+    dic = area_dict_gen()     # 加载字典
+    p = dic[str[:-4] + '0000']   # 获取省份
     try:
-        c = dic[str[:-2] + '00']
+        c = dic[str[:-2] + '00']   # 获取城市
     except:
-        c = p
-    a = dic[str]
-    str = "{},{},{}".format(p, c, a)
+        c = p                   # 首都,直辖市,特区  特殊情况处理
+    a = dic[str]              # 获取区/县
+    str = "{},{},{}".format(p, c, a) # 字符串拼接
     return str
 
 
 # 得到随机身份证前缀
 def getAreaId():
-    with open("area_fix", encoding='utf-8') as area:
+    with open("area_fix", encoding='utf-8') as area:   # 加载区号字典
         num = area.read()
     num_list = num.split('\n')
-    while True:
+    while True:                                       # 区号生成
         res = num_list[random.randint(0, len(num_list)-3)]
-        if res[4:] != '00':
+        if res[4:] != '00':                                 # 防止抽取到省号和城市号
             return res
 
 
 # 校验系数  前置要求:身份证前缀+生日+后三位
+# 算法 : https://zhidao.baidu.com/question/42349442.html
 def verify_tail(id):
     temp_num = 0
     verify_list = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
@@ -53,28 +54,34 @@ def verify_tail(id):
 # 生日生成
 def gen_birthday():
     birthday = ''
+    # 在这里修改年份范围
     year = random.randint(1940, 2023)
     month = random.randint(1, 13)
+    # 31天的月份
     if month == 1 and month == 3 and month == 5 and month == 7 and month == 8 and month == 10 and month == 12:
         day = random.randint(1, 31)
+    # 2月份 和 闰年判定
     elif month == 2:
         if calendar.isleap(year):
             day = random.randint(1, 29)
         else:
             day = random.randint(1, 28)
+    # 30天的月份
     else:
         day = random.randint(1, 30)
+    # 字符串拼接
     birthday = "{}{:0>2d}{:0>2d}".format(year, month, day)
     return birthday
 
 
-# 生日后三位
+# 生日后三位  无规律
 def gen_after_bir():
     i = random.randint(0, 999)
     return i
 
 
 # 判断性别
+# 根据 生日后三位的最后一位判定男女
 def judge_gender(i):
     if i % 2 == 0:
         return "女"
@@ -82,9 +89,10 @@ def judge_gender(i):
         return "男"
 
 
-# 生成一条人
+# 生成一条人  工程模式  将以上函数组合
 def new_person():
     id_prefix = getAreaId()
+    # 以下print均为测试探针
     # print("id_prefix = " + id_prefix)
     area = id_to_area(id_prefix)
     # print("area = " + area)
@@ -93,7 +101,9 @@ def new_person():
     after_bir = gen_after_bir()
     # print("after_bir = {}".format(after_bir))
     gender = judge_gender(after_bir)
+    # {:0>3d}用来格式化数据 不满三位数的补零
     id = '{}{}{:0>3d}'.format(id_prefix, birthday, after_bir)
+    # 加上最后以为校验码
     verify_tail_num = verify_tail(id)
     # print("verify_tail = {}".format(verify_tail_num))
     id += str(verify_tail_num)
@@ -102,6 +112,7 @@ def new_person():
     return "{},{},{},{}".format(id, random_name(gender), gender, area)
 
 
+# 随机生成名字
 def random_name(sex):
     # 删减部分小众姓氏
     firstName = "赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜戚谢邹喻水云苏潘葛奚范彭郎鲁韦昌马苗凤花方俞任袁柳鲍史唐费岑薛雷贺倪汤滕殷罗毕郝邬安常乐于时傅卞齐康伍余元卜顾孟平" \
